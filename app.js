@@ -151,6 +151,7 @@ window.AP = {};
     copepods: [],
     demandTab: 'pending',
     calDate: new Date(),
+    cpCalDate: new Date(),
     selectedDate: null,
     settings: {
       scheduleHorizon: 14, flexAdvance: 2, flexDelay: 1, sterilizerCapacity: 6,
@@ -1180,7 +1181,10 @@ window.AP = {};
           ${l.photoId ? `<div id="photo-${l.id}" style="margin-top:8px;"></div>` : ''}
         </div>
         <div class="log-status">${statusIcon}</div>
-        <div class="log-actions"><button class="btn-icon" onclick="AP.deleteLog('${l.id}')" title="${t('common.delete')}">🗑️</button></div>
+        <div class="log-actions">
+            <button class="btn-icon" onclick="AP.editLog('${l.id}')" title="${t('common.edit')}">✏️</button>
+            <button class="btn-icon" onclick="AP.deleteLog('${l.id}')" title="${t('common.delete')}">🗑️</button>
+          </div>
       </div>`;
     }).join('');
 
@@ -1200,6 +1204,110 @@ window.AP = {};
     AP.state.logs = AP.state.logs.filter(l => l.id !== id);
     save('ap-logs', AP.state.logs);
     renderLog();
+    if (window.location.hash === '#copepods' || document.getElementById('page-copepods').classList.contains('active')) {
+      renderCopepods();
+    }
+  };
+
+  AP.editLog = (id) => {
+    const l = AP.state.logs.find(x => x.id === id);
+    if (!l) return;
+    const isAlgae = !!l.speciesId;
+
+    const html = `
+      <div class="form-group">
+        <label>Target (目标)</label>
+        <div style="display:flex;gap:12px;margin-bottom:8px;">
+          <label style="display:flex;align-items:center;gap:4px;"><input type="radio" name="log-target" value="algae" ${isAlgae ? 'checked' : ''} style="accent-color:var(--primary)"> Algae (藻类)</label>
+          <label style="display:flex;align-items:center;gap:4px;"><input type="radio" name="log-target" value="copepod" ${!isAlgae ? 'checked' : ''} style="accent-color:var(--primary)"> Copepods (桡足类)</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>${AP.state.lang === 'zh' ? '日期' : 'Date'}</label><input type="date" id="log-date" class="form-input" value="${l.date}"></div>
+        <div class="form-group"><label>${AP.state.lang === 'zh' ? '时间' : 'Time'}</label><input type="time" id="log-time" class="form-input" value="${l.time}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>${AP.state.lang === 'zh' ? '类型' : 'Type'}</label>
+          <select id="log-type" class="form-select"></select>
+        </div>
+        <div class="form-group"><label id="log-sp-label">${t('demand.species')}</label><select id="log-sp" class="form-select"></select></div>
+      </div>
+      <div class="form-group"><label>${AP.state.lang === 'zh' ? '状态' : 'Status'}</label>
+        <select id="log-status" class="form-select">
+          <option value="normal" ${l.status === 'normal' ? 'selected' : ''}>${t('log.normal')} 🟢</option>
+          <option value="warning" ${l.status === 'warning' ? 'selected' : ''}>${t('log.warning')} 🟡</option>
+          <option value="contaminated" ${l.status === 'contaminated' ? 'selected' : ''}>${t('log.contaminated')} 🔴</option>
+        </select>
+      </div>
+      <div class="form-group"><label>${t('demand.notes')}</label><textarea id="log-notes" class="form-textarea" rows="2">${l.notes || ''}</textarea></div>
+      <div class="form-group"><label>Photo (Leave empty to keep current)</label><input type="file" id="log-photo" class="form-input" accept="image/*" capture="environment"></div>`;
+      
+    AP.openModal(t('common.edit') || 'Edit', html, async () => {
+      const target = document.querySelector('input[name="log-target"]:checked').value;
+      const file = document.getElementById('log-photo').files[0];
+      
+      if (file) {
+        l.photoId = uid();
+        const dataUrl = await compressImage(file);
+        await AP.db.savePhoto(l.photoId, dataUrl);
+      }
+      
+      l.date = document.getElementById('log-date').value;
+      l.time = document.getElementById('log-time').value;
+      l.type = document.getElementById('log-type').value;
+      l.status = document.getElementById('log-status').value;
+      l.notes = document.getElementById('log-notes').value;
+      
+      if (target === 'algae') {
+        l.speciesId = document.getElementById('log-sp').value;
+        l.copepodId = null;
+      } else {
+        l.copepodId = document.getElementById('log-sp').value;
+        l.speciesId = null;
+      }
+      
+      save('ap-logs', AP.state.logs);
+      renderLog();
+      renderCopepods();
+      AP.closeModal();
+      AP.showToast(t('common.save'), 'success');
+    });
+
+    const typeSelect = document.getElementById('log-type');
+    const spSelect = document.getElementById('log-sp');
+    const spLabel = document.getElementById('log-sp-label');
+    const radios = document.querySelectorAll('input[name="log-target"]');
+    
+    const updateDropdowns = () => {
+      const target = document.querySelector('input[name="log-target"]:checked').value;
+      if (target === 'algae') {
+        spLabel.textContent = t('demand.species');
+        spSelect.innerHTML = AP.state.species.map(s => `<option value="${s.id}">${s.code} - ${s.name || s.scientific}</option>`).join('');
+        typeSelect.innerHTML = `
+          <option value="inoculate">${t('task.inoculate')}</option>
+          <option value="sterilize">${t('task.sterilize')}</option>
+          <option value="observe">${AP.state.lang === 'zh' ? '观察' : 'Observe'}</option>
+          <option value="contamination">${AP.state.lang === 'zh' ? '污染' : 'Contamination'}</option>
+          <option value="harvest">${t('task.harvest')}</option>
+        `;
+      } else {
+        spLabel.textContent = 'Batch (批次)';
+        spSelect.innerHTML = AP.state.copepods.map(c => `<option value="${c.id}">${c.batchName}</option>`).join('');
+        typeSelect.innerHTML = `
+          <option value="feed">Feed (喂食)</option>
+          <option value="water">Water Change (换水)</option>
+          <option value="status">Status (状态)</option>
+        `;
+      }
+    };
+    
+    radios.forEach(r => r.addEventListener('change', updateDropdowns));
+    updateDropdowns();
+    
+    // Select initial values
+    if (l.speciesId) spSelect.value = l.speciesId;
+    if (l.copepodId) spSelect.value = l.copepodId;
+    typeSelect.value = l.type;
   };
 
   const openLogModal = () => {
@@ -1326,6 +1434,77 @@ window.AP = {};
   };
 
   // ── COPEPODS ──────────────────────────────────────────────────────────
+  const renderCopepodCalendar = () => {
+    const cd = AP.state.cpCalDate;
+    const y = cd.getFullYear(), m = cd.getMonth();
+    const today = todayISO();
+
+    const monthNames = TRANSLATIONS[AP.state.lang].months;
+    document.getElementById('cp-cal-month-year').textContent =
+      AP.state.lang === 'zh' ? `${y}年 ${monthNames[m]}` : `${monthNames[m]} ${y}`;
+
+    const grid = document.getElementById('copepod-calendar-grid');
+    grid.innerHTML = '';
+
+    // Weekday headers
+    TRANSLATIONS[AP.state.lang].weekdays.forEach(wd => {
+      grid.innerHTML += `<div class="cal-header-cell">${wd}</div>`;
+    });
+
+    const first = new Date(y, m, 1);
+    let startIdx = (first.getDay() + 6) % 7; // Mon=0
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const prevDays = new Date(y, m, 0).getDate();
+
+    // Previous month padding
+    for (let i = startIdx - 1; i >= 0; i--) {
+      const day = prevDays - i;
+      grid.innerHTML += `<div class="cal-cell other-month"><div class="cal-date">${day}</div></div>`;
+    }
+
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dayLogs = AP.state.logs.filter(l => l.copepodId != null && l.date === dateStr);
+      const isToday = dateStr === today;
+
+      let classes = 'cal-cell';
+      if (isToday) classes += ' today';
+      if (dayLogs.length === 0) classes += ' rest-day';
+
+      let pillsHtml = '';
+      const shown = dayLogs.slice(0, 4);
+      shown.forEach(l => {
+        const cp = AP.state.copepods.find(c => c.id === l.copepodId);
+        const name = cp ? cp.batchName : 'Copepod';
+        let logClass = '';
+        let label = '';
+        if (l.type === 'feed') { logClass = 'type-inoculate'; label = 'Feed'; }
+        else if (l.type === 'water') { logClass = 'type-scaleup'; label = 'Water'; }
+        else if (l.type === 'status') { logClass = 'type-rest'; label = 'Status'; }
+        else { logClass = 'type-harvest'; label = l.type; }
+
+        pillsHtml += `<div class="cal-task-pill ${logClass}">${label} (${name})</div>`;
+      });
+
+      if (dayLogs.length > 4) {
+        pillsHtml += `<div class="cal-more">+${dayLogs.length - 4}</div>`;
+      }
+
+      grid.innerHTML += `<div class="${classes}">
+        <div class="cal-date">${d}</div>
+        <div class="cal-tasks">${pillsHtml}</div>
+      </div>`;
+    }
+
+    // Next month padding
+    const totalCells = startIdx + daysInMonth;
+    const endPadding = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= endPadding; i++) {
+      grid.innerHTML += `<div class="cal-cell other-month"><div class="cal-date">${i}</div></div>`;
+    }
+  };
+
   const renderCopepods = () => {
     const grid = document.getElementById('copepods-grid');
     const today = todayISO();
@@ -1367,7 +1546,11 @@ window.AP = {};
         <div class="log-type-badge">${l.type}</div>
         <div class="log-notes">${l.notes || ''}</div>
         ${photoHtml}
-      </div>`;
+          <div class="log-actions" style="margin-top:8px;">
+            <button class="btn-icon" onclick="AP.editLog('${l.id}')" title="${t('common.edit')}">✏️</button>
+            <button class="btn-icon" onclick="AP.deleteLog('${l.id}')" title="${t('common.delete')}">🗑️</button>
+          </div>
+        </div>`;
     })).then(htmls => {
       logsEl.innerHTML = htmls.join('');
     });
@@ -1418,9 +1601,15 @@ window.AP = {};
         save('ap-logs', AP.state.logs);
         AP.closeModal();
         renderCopepods();
-      });
+        });
+      };
+
+      document.getElementById('cp-cal-prev').onclick = () => { AP.state.cpCalDate.setMonth(AP.state.cpCalDate.getMonth() - 1); renderCopepodCalendar(); };
+      document.getElementById('cp-cal-next').onclick = () => { AP.state.cpCalDate.setMonth(AP.state.cpCalDate.getMonth() + 1); renderCopepodCalendar(); };
+      document.getElementById('cp-cal-today').onclick = () => { AP.state.cpCalDate = new Date(); renderCopepodCalendar(); };
+      
+      renderCopepodCalendar();
     };
-  };
 
   const compressImage = (file) => {
     return new Promise((resolve) => {

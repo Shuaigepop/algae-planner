@@ -368,6 +368,32 @@
       </div>
       <div id="copepods-grid" class="species-grid"></div>
       
+      <!-- Copepod Calendar -->
+      <div class="calendar-controls" style="margin-top:2rem;">
+        <div class="calendar-nav">
+          <button id="cp-cal-prev" class="btn-icon cal-nav-btn" aria-label="Previous Month">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <h2 id="cp-cal-month-year" class="cal-title"></h2>
+          <button id="cp-cal-next" class="btn-icon cal-nav-btn" aria-label="Next Month">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="calendar-actions">
+          <button id="cp-cal-today" class="btn-sm btn-outline" data-i18n="calendar.today">Today</button>
+        </div>
+      </div>
+      
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="legend-dot type-inoculate"></span>Feed</span>
+        <span class="legend-item"><span class="legend-dot type-scaleup"></span>Water Change</span>
+        <span class="legend-item"><span class="legend-dot type-rest"></span>Status</span>
+      </div>
+      
+      <div class="calendar-wrapper">
+        <div id="copepod-calendar-grid" class="calendar-grid"></div>
+      </div>
+      
       <div class="section-header" style="margin-top:2rem;">
         <h2 class="section-title" data-i18n="copepods.logs">日誌記錄</h2>
         <button id="btn-add-copepod-log" class="btn-primary" style="float:right;">
