@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlgaePlanner — 藻類培養計劃系統</title>
+  <meta name="description" content="Automated algae stock culture maintenance planning and calendar system for aquaculture hatcheries">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- ===== Sidebar ===== -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🧬</span>
+        <span class="logo-text">AlgaePlanner</span>
+      </div>
+      <div class="logo-sub" data-i18n="appSubtitle">藻類培養計劃系統</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-page="dashboard" id="nav-dashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text" data-i18n="nav.dashboard">儀表板</span>
+      </a>
+      <a class="nav-item" data-page="calendar" id="nav-calendar">
+        <span class="nav-icon">📅</span>
+        <span class="nav-text" data-i18n="nav.calendar">培養日曆</span>
+      </a>
+      <div class="nav-divider"></div>
+      <a class="nav-item" data-page="species" id="nav-species">
+        <span class="nav-icon">🦠</span>
+        <span class="nav-text" data-i18n="nav.species">藻種管理</span>
+      </a>
+      <a class="nav-item" data-page="inventory" id="nav-inventory">
+        <span class="nav-icon">🧪</span>
+        <span class="nav-text" data-i18n="nav.inventory">器材庫存</span>
+      </a>
+      <div class="nav-divider"></div>
+      <a class="nav-item" data-page="demand" id="nav-demand">
+        <span class="nav-icon">📦</span>
+        <span class="nav-text" data-i18n="nav.demand">養殖場需求</span>
+        <span id="demand-badge" class="nav-badge hidden">0</span>
+      </a>
+      <a class="nav-item" data-page="walne" id="nav-walne">
+        <span class="nav-icon">⚗️</span>
+        <span class="nav-text" data-i18n="nav.walne">培養基計算</span>
+      </a>
+      <a class="nav-item" data-page="log" id="nav-log">
+        <span class="nav-icon">📝</span>
+        <span class="nav-text" data-i18n="nav.log">培養日誌</span>
+      </a>
+      <a class="nav-item" data-page="copepods" id="nav-copepods">
+        <span class="nav-icon">🦐</span>
+        <span class="nav-text" data-i18n="nav.copepods">橈足類</span>
+      </a>
+      <a class="nav-item" data-page="settings" id="nav-settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-text" data-i18n="nav.settings">設定</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="lang-toggle" class="sidebar-btn" title="Switch Language / 切換語言">
+        <span class="btn-content">🌐 <span id="lang-label">EN</span></span>
+      </button>
+      <button id="btn-export" class="sidebar-btn" title="Export Data / 匯出資料">
+        <span class="btn-content">💾 <span data-i18n="common.export">匯出</span></span>
+      </button>
+      <button id="btn-import" class="sidebar-btn" title="Import Data / 匯入資料">
+        <span class="btn-content">📂 <span data-i18n="common.import">匯入</span></span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== Main Content ===== -->
+  <main id="main-content" class="main-content">
+    <!-- Header Bar -->
+    <header class="main-header">
+      <div class="header-left">
+        <button id="sidebar-toggle" class="btn-icon sidebar-toggle" aria-label="Toggle Sidebar">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 id="page-title" class="page-title" data-i18n="nav.dashboard">儀表板</h1>
+      </div>
+      <div class="header-right">
+        <div class="today-badge" id="today-badge">
+          <span class="today-pulse"></span>
+          <span>🗓️</span>
+          <span id="today-date"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========== PAGE: Dashboard ========== -->
+    <section id="page-dashboard" class="page active">
+      <div class="dashboard-grid">
+        <!-- Stats Row -->
+        <div class="stats-row">
+          <div class="stat-card" id="stat-card-species">
+            <div class="stat-icon">🦠</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-species">6</div>
+              <div class="stat-label" data-i18n="dashboard.totalSpecies">管理藻種</div>
+            </div>
+          </div>
+          <div class="stat-card" id="stat-card-flasks">
+            <div class="stat-icon">🧪</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-flasks">0</div>
+              <div class="stat-label" data-i18n="dashboard.availableFlasks">可用錐形瓶</div>
+            </div>
+          </div>
+          <div class="stat-card" id="stat-card-demands">
+            <div class="stat-icon">📦</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-demands">0</div>
+              <div class="stat-label" data-i18n="dashboard.pendingDemands">待處理需求</div>
+            </div>
+          </div>
+          <div class="stat-card" id="stat-card-rest">
+            <div class="stat-icon">😴</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-nextRest">—</div>
+              <div class="stat-label" data-i18n="dashboard.nextRestDay">下次休息</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Tasks -->
+        <div class="dash-section">
+          <div class="section-header">
+            <h2 class="section-title" data-i18n="dashboard.todayTasks">今日任務</h2>
+            <span id="today-task-count" class="section-badge">0</span>
+          </div>
+          <div id="today-tasks" class="task-cards">
+            <div class="empty-state" data-i18n="dashboard.noTasks">今日無任務，好好休息！🎉</div>
+          </div>
+        </div>
+
+        <!-- Upcoming 7 Days -->
+        <div class="dash-section">
+          <div class="section-header">
+            <h2 class="section-title" data-i18n="dashboard.upcoming">未來 7 天</h2>
+          </div>
+          <div id="upcoming-tasks" class="upcoming-timeline"></div>
+        </div>
+
+        <!-- Species Status -->
+        <div class="dash-section full-width">
+          <div class="section-header">
+            <h2 class="section-title" data-i18n="dashboard.speciesStatus">藻種倒數</h2>
+          </div>
+          <div id="species-countdown" class="species-countdown-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: Calendar ========== -->
+    <section id="page-calendar" class="page">
+      <div class="calendar-controls">
+        <div class="calendar-nav">
+          <button id="cal-prev" class="btn-icon cal-nav-btn" aria-label="Previous Month">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <h2 id="cal-month-year" class="cal-title"></h2>
+          <button id="cal-next" class="btn-icon cal-nav-btn" aria-label="Next Month">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="calendar-actions">
+          <button id="cal-today" class="btn-sm btn-outline" data-i18n="calendar.today">今天</button>
+          <button id="cal-generate" class="btn-sm btn-primary" data-i18n="calendar.generate">生成排程</button>
+        </div>
+      </div>
+
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="legend-dot type-inoculate"></span><span data-i18n="task.inoculate">接種</span></span>
+        <span class="legend-item"><span class="legend-dot type-sterilize"></span><span data-i18n="task.sterilize">滅菌</span></span>
+        <span class="legend-item"><span class="legend-dot type-harvest"></span><span data-i18n="task.harvest">出貨</span></span>
+        <span class="legend-item"><span class="legend-dot type-scaleup"></span><span data-i18n="task.scaleup">放大</span></span>
+        <span class="legend-item"><span class="legend-dot type-rest"></span><span data-i18n="task.rest">休息日</span></span>
+      </div>
+
+      <div class="calendar-wrapper">
+        <div id="calendar-grid" class="calendar-grid"></div>
+      </div>
+
+      <!-- Day Detail Slide Panel -->
+      <div id="day-detail" class="day-detail hidden">
+        <div class="day-detail-header">
+          <h3 id="day-detail-date"></h3>
+          <button id="day-detail-close" class="btn-icon">✕</button>
+        </div>
+        <div id="day-detail-tasks" class="day-detail-tasks"></div>
+        <div class="day-detail-actions">
+          <button id="day-add-task" class="btn-primary btn-full" data-i18n="calendar.addTask">
+            ＋ 新增任務
+          </button>
+          <button id="day-mark-complete" class="btn-outline btn-full" data-i18n="calendar.markComplete">
+            ✓ 全部完成
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: Species ========== -->
+    <section id="page-species" class="page">
+      <div class="page-actions">
+        <button id="btn-add-species" class="btn-primary">
+          <span>＋</span> <span data-i18n="species.add">新增藻種</span>
+        </button>
+      </div>
+      <div id="species-grid" class="species-grid"></div>
+    </section>
+
+    <!-- ========== PAGE: Inventory ========== -->
+    <section id="page-inventory" class="page">
+      <div class="page-actions">
+        <button id="btn-add-container" class="btn-primary">
+          <span>＋</span> <span data-i18n="inventory.addType">新增容器類型</span>
+        </button>
+      </div>
+      <div id="inventory-grid" class="inventory-grid"></div>
+      <div class="section-header" style="margin-top:2rem;">
+        <h2 class="section-title" data-i18n="inventory.statusOverview">使用概覽</h2>
+      </div>
+      <div id="inventory-chart" class="inventory-chart"></div>
+    </section>
+
+    <!-- ========== PAGE: Demand ========== -->
+    <section id="page-demand" class="page">
+      <div class="page-actions">
+        <button id="btn-add-demand" class="btn-primary">
+          <span>＋</span> <span data-i18n="demand.add">新增需求</span>
+        </button>
+      </div>
+      <div class="demand-tabs">
+        <button class="tab-btn active" data-tab="pending" data-i18n="demand.pending">待處理</button>
+        <button class="tab-btn" data-tab="scheduled" data-i18n="demand.scheduled">已排程</button>
+        <button class="tab-btn" data-tab="fulfilled" data-i18n="demand.fulfilled">已完成</button>
+      </div>
+      <div id="demand-list" class="demand-list"></div>
+    </section>
+
+    <!-- ========== PAGE: Walne Calculator ========== -->
+    <section id="page-walne" class="page">
+      <div class="walne-layout">
+        <!-- Input Panel -->
+        <div class="walne-input-panel glass-card">
+          <h2 data-i18n="walne.inputTitle">計算培養基用量</h2>
+          <div class="form-group">
+            <label for="walne-volume" data-i18n="walne.totalVolume">培養總體積 (L)</label>
+            <input type="number" id="walne-volume" class="form-input" value="1" min="0.1" step="0.1">
+          </div>
+          <div class="preset-btns">
+            <button class="btn-sm btn-outline" data-volume="0.5">500 mL</button>
+            <button class="btn-sm btn-outline active" data-volume="1">1 L</button>
+            <button class="btn-sm btn-outline" data-volume="2">2 L</button>
+            <button class="btn-sm btn-outline" data-volume="5">5 L</button>
+            <button class="btn-sm btn-outline" data-volume="10">10 L</button>
+            <button class="btn-sm btn-outline" data-volume="20">20 L</button>
+          </div>
+          <div class="form-group">
+            <label data-i18n="walne.mediumType">培養基類型</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="medium-type" value="walne" checked> Walne
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="medium-type" value="walne-silicate"> Walne + 矽酸鹽 (Diatoms)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="walne-results">
+          <div class="walne-card glass-card" id="walne-result-usage">
+            <div class="walne-card-header">
+              <h3 data-i18n="walne.usage">添加量</h3>
+              <span class="walne-card-icon">💧</span>
+            </div>
+            <div id="walne-usage-content" class="walne-card-body"></div>
+          </div>
+
+          <div class="walne-card glass-card" id="walne-result-a">
+            <div class="walne-card-header">
+              <h3>Stock A — <span data-i18n="walne.nutrient">營養液</span></h3>
+              <span class="walne-card-icon">🧪</span>
+            </div>
+            <div id="walne-a-content" class="walne-card-body"></div>
+          </div>
+
+          <div class="walne-card glass-card" id="walne-result-b">
+            <div class="walne-card-header">
+              <h3>Stock B — <span data-i18n="walne.trace">微量元素</span></h3>
+              <span class="walne-card-icon">🔬</span>
+            </div>
+            <div id="walne-b-content" class="walne-card-body"></div>
+          </div>
+
+          <div class="walne-card glass-card" id="walne-result-c">
+            <div class="walne-card-header">
+              <h3>Stock C — <span data-i18n="walne.vitamin">維生素</span></h3>
+              <span class="walne-card-icon">💊</span>
+            </div>
+            <div id="walne-c-content" class="walne-card-body"></div>
+          </div>
+
+          <div class="walne-card glass-card" id="walne-result-d">
+            <div class="walne-card-header">
+              <h3>Stock D — <span data-i18n="walne.silicate">矽酸鹽</span></h3>
+              <span class="walne-card-icon">💎</span>
+            </div>
+            <div id="walne-d-content" class="walne-card-body"></div>
+          </div>
+        </div>
+
+        <!-- Reference -->
+        <div class="walne-reference glass-card">
+          <h3 data-i18n="walne.reference">文獻參考</h3>
+          <div class="ref-list">
+            <p class="ref-item">Walne, P. R. (1970). <em>Studies on the food value of nineteen genera of algae to juvenile bivalves.</em> Fishery Investigations, Series II, 26(5), 1–62.</p>
+            <p class="ref-item">Lavens, P., & Sorgeloos, P. (1996). <em>Manual on the Production and Use of Live Food for Aquaculture.</em> FAO Fisheries Technical Paper, No. 361.</p>
+            <p class="ref-item">CCAP. <em>Walne's Medium Protocol.</em> Scottish Marine Institute, Oban, UK.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: Culture Log ========== -->
+    <section id="page-log" class="page">
+      <div class="page-actions">
+        <button id="btn-add-log" class="btn-primary">
+          <span>＋</span> <span data-i18n="log.add">新增日誌</span>
+        </button>
+        <div class="log-filters">
+          <select id="log-filter-species" class="form-select">
+            <option value="all" data-i18n="log.allSpecies">所有藻種</option>
+          </select>
+          <select id="log-filter-type" class="form-select">
+            <option value="all" data-i18n="log.allTypes">所有類型</option>
+            <option value="inoculate">接種</option>
+            <option value="sterilize">滅菌</option>
+            <option value="observe">觀察</option>
+            <option value="contamination">污染</option>
+          </select>
+        </div>
+      </div>
+      <div id="log-entries" class="log-entries"></div>
+    </section>
+
+    <!-- ========== PAGE: Copepods ========== -->
+    <section id="page-copepods" class="page">
+      <div class="page-actions">
+        <button id="btn-add-copepod" class="btn-primary">
+          <span>＋</span> <span data-i18n="copepods.add">新增批次</span>
+        </button>
+      </div>
+      <div id="copepods-grid" class="species-grid"></div>
+      
+      <div class="section-header" style="margin-top:2rem;">
+        <h2 class="section-title" data-i18n="copepods.logs">日誌記錄</h2>
+        <button id="btn-add-copepod-log" class="btn-primary" style="float:right;">
+          <span>＋</span> <span data-i18n="copepods.addLog">新增日誌</span>
+        </button>
+      </div>
+      <div id="copepods-logs" class="log-entries"></div>
+    </section>
+
+    <!-- ========== PAGE: Settings ========== -->
+    <section id="page-settings" class="page">
+      <div class="walne-layout">
+        <div class="walne-input-panel glass-card">
+          <h2 data-i18n="settings.scheduler">排程器設定</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="settings.horizon">規劃天數 (Days)</label>
+              <input type="number" id="set-horizon" class="form-input" min="7" max="30">
+            </div>
+            <div class="form-group">
+              <label data-i18n="settings.maxDailyHours">每日最大工時 (Mins)</label>
+              <input type="number" id="set-max-hours" class="form-input">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="settings.flexAdvance">最大提前天數</label>
+              <input type="number" id="set-flex-adv" class="form-input">
+            </div>
+            <div class="form-group">
+              <label data-i18n="settings.flexDelay">最大延遲天數</label>
+              <input type="number" id="set-flex-del" class="form-input">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="settings.sterilizerCap">滅菌鍋容量 (瓶)</label>
+              <input type="number" id="set-ster-cap" class="form-input">
+            </div>
+            <div class="form-group">
+              <label data-i18n="settings.sterilizerTime">單次滅菌時間 (Mins)</label>
+              <input type="number" id="set-ster-time" class="form-input">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="settings.uvTime">紫外燈照射時間 (Mins)</label>
+              <input type="number" id="set-uv-time" class="form-input">
+            </div>
+            <div class="form-group">
+              <label data-i18n="settings.cleaningTime">清潔時間 (Mins)</label>
+              <input type="number" id="set-clean-time" class="form-input">
+            </div>
+          </div>
+          <div class="form-group">
+            <label data-i18n="settings.inocTime">單瓶接種時間 (Mins)</label>
+            <input type="number" id="set-inoc-time" class="form-input">
+          </div>
+          <div class="page-actions">
+            <button id="btn-save-settings" class="btn-primary" data-i18n="common.save">儲存設定</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Modal ===== -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal" class="modal glass-card">
+      <div class="modal-header">
+        <h2 id="modal-title"></h2>
+        <button id="modal-close" class="btn-icon modal-close-btn">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+      <div id="modal-footer" class="modal-footer">
+        <button id="modal-cancel" class="btn-secondary" data-i18n="common.cancel">取消</button>
+        <button id="modal-confirm" class="btn-primary" data-i18n="common.confirm">確認</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Toast ===== -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Hidden File Input -->
+  <input type="file" id="file-import" accept=".json" style="display:none">
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
