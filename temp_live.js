@@ -1130,17 +1130,10 @@ window.AP = {};
     // Populate species filter
     const spSel = document.getElementById('log-filter-species');
     if (spSel.options.length <= 1) {
-      spSel.innerHTML = '<option value="all">All Targets</option>';
       AP.state.species.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.id;
         opt.textContent = `${s.code} — ${spName(s)}`;
-        spSel.appendChild(opt);
-      });
-      AP.state.copepods.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = `🦠 ${c.batchName}`;
         spSel.appendChild(opt);
       });
     }
@@ -1149,7 +1142,7 @@ window.AP = {};
     const filterTy = document.getElementById('log-filter-type').value;
 
     let logs = [...AP.state.logs].sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
-    if (filterSp !== 'all') logs = logs.filter(l => l.speciesId === filterSp || l.copepodId === filterSp);
+    if (filterSp !== 'all') logs = logs.filter(l => l.speciesId === filterSp);
     if (filterTy !== 'all') logs = logs.filter(l => l.type === filterTy);
 
     const list = document.getElementById('log-entries');
@@ -1159,40 +1152,18 @@ window.AP = {};
     }
 
     list.innerHTML = logs.map(l => {
-      let targetName = '';
-      if (l.speciesId) {
-        const sp = AP.state.species.find(s => s.id === l.speciesId);
-        targetName = sp ? sp.icon + ' ' + sp.code : l.speciesId;
-      } else if (l.copepodId) {
-        const cp = AP.state.copepods.find(c => c.id === l.copepodId);
-        targetName = cp ? '🦠 ' + cp.batchName : l.copepodId;
-      }
-      
+      const sp = AP.state.species.find(s => s.id === l.speciesId);
       const statusIcon = l.status === 'normal' ? '✅' : l.status === 'warning' ? '⚠️' : '☠️';
-      const typeColor = { inoculate: 'var(--color-inoculate)', sterilize: 'var(--color-sterilize)', observe: 'var(--info)', contamination: 'var(--danger)', harvest: 'var(--color-harvest)', feed: '#f59e0b', water: '#06b6d4', status: '#8b5cf6' };
-      
+      const typeColor = { inoculate: 'var(--color-inoculate)', sterilize: 'var(--color-sterilize)', observe: 'var(--info)', contamination: 'var(--danger)', harvest: 'var(--color-harvest)' };
       return `<div class="log-entry">
         <div class="log-date">${l.date}<br>${l.time}</div>
         <div class="log-type-badge" style="background:${typeColor[l.type] || 'var(--info)'}22;color:${typeColor[l.type] || 'var(--info)'}">${l.type}</div>
-        <div class="log-species-name">${targetName}</div>
-        <div class="log-notes" style="flex:1">
-          <div>${l.notes || ''}</div>
-          ${l.photoId ? `<div id="photo-${l.id}" style="margin-top:8px;"></div>` : ''}
-        </div>
+        <div class="log-species-name">${sp ? sp.icon + ' ' + sp.code : l.speciesId}</div>
+        <div class="log-notes">${l.notes || ''}</div>
         <div class="log-status">${statusIcon}</div>
         <div class="log-actions"><button class="btn-icon" onclick="AP.deleteLog('${l.id}')" title="${t('common.delete')}">🗑️</button></div>
       </div>`;
     }).join('');
-
-    logs.filter(l => l.photoId).forEach(async l => {
-      const url = await AP.db.getPhoto(l.photoId);
-      if (url) {
-        const phDiv = document.getElementById(`photo-${l.id}`);
-        if (phDiv) {
-          phDiv.innerHTML = `<img src="${url}" class="photo-thumb" onclick="window.open('${url}')" style="max-height:80px;border-radius:4px;cursor:pointer;">`;
-        }
-      }
-    });
   };
 
   AP.deleteLog = (id) => {
@@ -1203,23 +1174,23 @@ window.AP = {};
   };
 
   const openLogModal = () => {
+    const opts = AP.state.species.map(s => `<option value="${s.id}">${s.code} — ${spName(s)}</option>`).join('');
     const html = `
-      <div class="form-group">
-        <label>Target (记录对象)</label>
-        <div style="display:flex;gap:12px;margin-bottom:8px;">
-          <label style="display:flex;align-items:center;gap:4px;"><input type="radio" name="log-target" value="algae" checked style="accent-color:var(--primary)"> Algae (藻类)</label>
-          <label style="display:flex;align-items:center;gap:4px;"><input type="radio" name="log-target" value="copepod" style="accent-color:var(--primary)"> Copepods (桡足类)</label>
-        </div>
-      </div>
       <div class="form-row">
         <div class="form-group"><label>${AP.state.lang === 'zh' ? '日期' : 'Date'}</label><input type="date" id="log-date" class="form-input" value="${todayISO()}"></div>
         <div class="form-group"><label>${AP.state.lang === 'zh' ? '時間' : 'Time'}</label><input type="time" id="log-time" class="form-input" value="${nowTime()}"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>${AP.state.lang === 'zh' ? '類型' : 'Type'}</label>
-          <select id="log-type" class="form-select"></select>
+          <select id="log-type" class="form-select">
+            <option value="inoculate">${t('task.inoculate')}</option>
+            <option value="sterilize">${t('task.sterilize')}</option>
+            <option value="observe">${AP.state.lang === 'zh' ? '觀察' : 'Observe'}</option>
+            <option value="contamination">${AP.state.lang === 'zh' ? '污染' : 'Contamination'}</option>
+            <option value="harvest">${t('task.harvest')}</option>
+          </select>
         </div>
-        <div class="form-group"><label id="log-sp-label">${t('demand.species')}</label><select id="log-sp" class="form-select"></select></div>
+        <div class="form-group"><label>${t('demand.species')}</label><select id="log-sp" class="form-select">${opts}</select></div>
       </div>
       <div class="form-group"><label>${AP.state.lang === 'zh' ? '狀態' : 'Status'}</label>
         <select id="log-status" class="form-select">
@@ -1228,73 +1199,22 @@ window.AP = {};
           <option value="contaminated">${t('log.contaminated')} ☠️</option>
         </select>
       </div>
-      <div class="form-group"><label>${t('demand.notes')}</label><textarea id="log-notes" class="form-textarea" rows="2"></textarea></div>
-      <div class="form-group"><label>Photo</label><input type="file" id="log-photo" class="form-input" accept="image/*" capture="environment"></div>`;
-      
-    AP.openModal(t('log.add'), html, async () => {
-      const target = document.querySelector('input[name="log-target"]:checked').value;
-      const file = document.getElementById('log-photo').files[0];
-      let photoId = null;
-      if (file) {
-        photoId = uid();
-        const dataUrl = await compressImage(file);
-        await AP.db.savePhoto(photoId, dataUrl);
-      }
-      
-      const entry = {
+      <div class="form-group"><label>${t('demand.notes')}</label><textarea id="log-notes" class="form-textarea" rows="3"></textarea></div>`;
+    AP.openModal(t('log.add'), html, () => {
+      AP.state.logs.push({
         id: uid(),
         date: document.getElementById('log-date').value,
         time: document.getElementById('log-time').value,
         type: document.getElementById('log-type').value,
+        speciesId: document.getElementById('log-sp').value,
         status: document.getElementById('log-status').value,
-        notes: document.getElementById('log-notes').value,
-        photoId: photoId
-      };
-      
-      if (target === 'algae') {
-        entry.speciesId = document.getElementById('log-sp').value;
-      } else {
-        entry.copepodId = document.getElementById('log-sp').value;
-      }
-      
-      AP.state.logs.push(entry);
+        notes: document.getElementById('log-notes').value
+      });
       save('ap-logs', AP.state.logs);
       renderLog();
-      renderCopepods();
       AP.closeModal();
       AP.showToast(t('common.save'), 'success');
     });
-
-    const typeSelect = document.getElementById('log-type');
-    const spSelect = document.getElementById('log-sp');
-    const spLabel = document.getElementById('log-sp-label');
-    const radios = document.querySelectorAll('input[name="log-target"]');
-    
-    const updateDropdowns = () => {
-      const target = document.querySelector('input[name="log-target"]:checked').value;
-      if (target === 'algae') {
-        spLabel.textContent = t('demand.species');
-        spSelect.innerHTML = AP.state.species.map(s => `<option value="${s.id}">${s.code} — ${spName(s)}</option>`).join('');
-        typeSelect.innerHTML = `
-          <option value="inoculate">${t('task.inoculate')}</option>
-          <option value="sterilize">${t('task.sterilize')}</option>
-          <option value="observe">${AP.state.lang === 'zh' ? '觀察' : 'Observe'}</option>
-          <option value="contamination">${AP.state.lang === 'zh' ? '污染' : 'Contamination'}</option>
-          <option value="harvest">${t('task.harvest')}</option>
-        `;
-      } else {
-        spLabel.textContent = 'Batch (批次)';
-        spSelect.innerHTML = AP.state.copepods.map(c => `<option value="${c.id}">${c.batchName}</option>`).join('');
-        typeSelect.innerHTML = `
-          <option value="feed">Feed (喂食)</option>
-          <option value="water">Water Change (换水)</option>
-          <option value="status">Status (状态)</option>
-        `;
-      }
-    };
-    
-    radios.forEach(r => r.addEventListener('change', updateDropdowns));
-    updateDropdowns();
   };
 
   // ── SETTINGS ──────────────────────────────────────────────────────────
@@ -1328,29 +1248,18 @@ window.AP = {};
   // ── COPEPODS ──────────────────────────────────────────────────────────
   const renderCopepods = () => {
     const grid = document.getElementById('copepods-grid');
-    const today = todayISO();
-    grid.innerHTML = AP.state.copepods.map(c => {
-      const daysAlive = diffDays(c.startDate, today);
-      const logsCount = AP.state.logs.filter(l => l.copepodId === c.id).length;
-      return `
+    grid.innerHTML = AP.state.copepods.map(c => `
       <div class="species-card">
         <div class="sp-header">
           <div style="display:flex;align-items:center;gap:12px">
             <div class="sp-icon-wrapper" style="background:var(--primary-soft)">🦠</div>
             <div>
               <div class="sp-code">${c.batchName}</div>
-              <div class="sp-scientific">Copepods</div>
+              <div class="sp-scientific">${c.status} | Start: ${shortDate(c.startDate)}</div>
             </div>
           </div>
         </div>
-        <div class="sp-info-grid">
-          <div class="sp-info-item"><span class="sp-info-label">Status (状态)</span><span class="sp-info-value">${c.status}</span></div>
-          <div class="sp-info-item"><span class="sp-info-label">Start Date (建池日期)</span><span class="sp-info-value">${shortDate(c.startDate)}</span></div>
-          <div class="sp-info-item"><span class="sp-info-label">Days Alive (养殖天数)</span><span class="sp-info-value">${daysAlive}</span></div>
-          <div class="sp-info-item"><span class="sp-info-label">Logs (记录)</span><span class="sp-info-value">${logsCount}</span></div>
-        </div>
-      </div>`;
-    }).join('');
+      </div>`).join('');
 
     const logsEl = document.getElementById('copepods-logs');
     const logs = AP.state.logs.filter(l => l.copepodId);
