@@ -8,6 +8,17 @@ window.AP = {};
 
 (function (AP) {
   'use strict';
+  
+  AP.activeWorkspace = localStorage.getItem('ap-active-workspace') || 'default';
+  
+  const loadWorkspaces = () => {
+    try { 
+      const v = localStorage.getItem('ap-workspaces'); 
+      if (v) return JSON.parse(v);
+    } catch {}
+    return [{id: 'default', name: 'Default Workspace'}];
+  };
+  AP.workspaces = loadWorkspaces();
 
   // ── DEFAULT DATA ──────────────────────────────────────────────────────
   const DEFAULT_SPECIES = [
@@ -222,8 +233,14 @@ window.AP = {};
   };
 
   // ── STORAGE ───────────────────────────────────────────────────────────
-  const load = (key, def) => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; } };
-  const save = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+  const load = (key, def) => { 
+    if (key !== 'ap-workspaces') key = AP.activeWorkspace + '_' + key;
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; } 
+  };
+  const save = (key, data) => { 
+    if (key !== 'ap-workspaces') key = AP.activeWorkspace + '_' + key;
+    localStorage.setItem(key, JSON.stringify(data)); 
+  };
 
   const loadAll = () => {
     AP.state.lang = localStorage.getItem('ap-lang') || 'zh';
@@ -328,6 +345,33 @@ window.AP = {};
     document.getElementById('today-date').textContent = formatDate(todayISO());
     const ap = document.querySelector('.page.active');
     if (ap) renderPage(ap.id.replace('page-', ''));
+  };
+
+  // ── WORKSPACES ────────────────────────────────────────────────────────
+  const renderWorkspaces = () => {
+    const sel = document.getElementById('workspace-select');
+    if (!sel) return;
+    sel.innerHTML = AP.workspaces.map(w => `<option value="${w.id}" ${w.id === AP.activeWorkspace ? 'selected' : ''}>${w.name}</option>`).join('');
+  };
+
+  const switchWorkspace = (id) => {
+    if (id === AP.activeWorkspace) return;
+    AP.activeWorkspace = id;
+    localStorage.setItem('ap-active-workspace', id);
+    loadAll();
+    const ap = document.querySelector('.page.active');
+    if (ap) renderPage(ap.id.replace('page-', ''));
+    AP.showToast('Workspace switched', 'success');
+  };
+
+  const createNewWorkspace = () => {
+    const name = prompt('Enter new workspace name:');
+    if (!name) return;
+    const newId = 'ws_' + Date.now();
+    AP.workspaces.push({id: newId, name});
+    localStorage.setItem('ap-workspaces', JSON.stringify(AP.workspaces));
+    renderWorkspaces();
+    switchWorkspace(newId);
   };
 
   // ── SCHEDULING ENGINE ────────────────────────────────────────────────
@@ -1228,7 +1272,7 @@ window.AP = {};
           <option value="feed">Feed</option><option value="water">Water Change</option><option value="status">Status</option>
         </select></div>
         <div class="form-group"><label>Notes</label><input type="text" id="cpl-notes" class="form-input"></div>
-        <div class="form-group"><label>Photo</label><input type="file" id="cpl-photo" class="form-input" accept="image/*"></div>
+        <div class="form-group"><label>Photo</label><input type="file" id="cpl-photo" class="form-input" accept="image/*" capture="environment"></div>
       `, async () => {
         const batchId = document.getElementById('cpl-batch').value;
         const file = document.getElementById('cpl-photo').files[0];
@@ -1317,6 +1361,11 @@ window.AP = {};
 
     // Set language
     applyI18n();
+    
+    // Workspaces
+    renderWorkspaces();
+    document.getElementById('workspace-select')?.addEventListener('change', (e) => switchWorkspace(e.target.value));
+    document.getElementById('btn-new-workspace')?.addEventListener('click', createNewWorkspace);
 
     // Navigation
     document.querySelectorAll('.nav-item').forEach(el => {
