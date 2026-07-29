@@ -538,3 +538,12 @@ button { font-family: inherit; outline: none; cursor: pointer; transition: 0.2s;
   margin-top: 12px;
   border: 1px solid var(--border-light);
 }
+
+/* Logs UI Fix */
+.log-entry { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding: 16px; background: var(--glass-bg); border-radius: 16px; border: 1px solid var(--border-light); margin-bottom: 12px; }
+.log-date { font-size: 13px; color: var(--text-muted); font-weight: 600; min-width: 60px; line-height: 1.4; }
+.log-type-badge { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; background: var(--primary-soft); color: var(--primary); }
+.log-species-name { font-weight: 700; flex: 1; min-width: 120px; }
+.log-notes { color: var(--text-muted); font-size: 14px; flex: 2; min-width: 200px; }
+.log-status { font-size: 20px; }
+.log-actions { margin-left: auto; }
