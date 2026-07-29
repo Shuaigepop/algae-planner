@@ -9,96 +9,50 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
-  <!-- ===== Sidebar ===== -->
-  <aside id="sidebar" class="sidebar">
-    <div class="sidebar-header">
+  <div class="ocean-bg"><div class="caustics"></div></div>
+
+  <!-- Pill Navbar -->
+  <nav class="pill-navbar glass">
+    <div class="nav-left">
       <div class="logo">
         <span class="logo-icon">🧬</span>
         <span class="logo-text">AlgaePlanner</span>
       </div>
-      <div class="logo-sub" data-i18n="appSubtitle">藻類培養計劃系統</div>
-      <div class="workspace-selector" style="margin-top: 15px;">
-        <select id="workspace-select" class="form-select" style="width: 100%; margin-bottom: 8px;"></select>
-        <button id="btn-new-workspace" class="btn-sm btn-outline" style="width: 100%;">+ New Workspace</button>
+    </div>
+    <div class="nav-links">
+      <a class="nav-item active" data-page="dashboard" id="nav-dashboard"><span class="nav-text" data-i18n="nav.dashboard">儀表板</span></a>
+      <a class="nav-item" data-page="calendar" id="nav-calendar"><span class="nav-text" data-i18n="nav.calendar">培養日曆</span></a>
+      <a class="nav-item" data-page="species" id="nav-species"><span class="nav-text" data-i18n="nav.species">藻種管理</span></a>
+      <a class="nav-item" data-page="inventory" id="nav-inventory"><span class="nav-text" data-i18n="nav.inventory">器材庫存</span></a>
+      <a class="nav-item" data-page="demand" id="nav-demand"><span class="nav-text" data-i18n="nav.demand">養殖場需求</span><span id="demand-badge" class="nav-badge hidden">0</span></a>
+      <a class="nav-item" data-page="walne" id="nav-walne"><span class="nav-text" data-i18n="nav.walne">培養基計算</span></a>
+      <a class="nav-item" data-page="log" id="nav-log"><span class="nav-text" data-i18n="nav.log">培養日誌</span></a>
+      <a class="nav-item" data-page="copepods" id="nav-copepods"><span class="nav-text" data-i18n="nav.copepods">橈足類</span></a>
+      <a class="nav-item" data-page="settings" id="nav-settings"><span class="nav-text" data-i18n="nav.settings">設定</span></a>
+    </div>
+    <div class="nav-right">
+      <select id="workspace-select" class="form-select nav-select"></select>
+      <button id="btn-new-workspace" class="btn-sm btn-outline">+ WS</button>
+      <button id="lang-toggle" class="btn-icon" title="Switch Language">
+        <span id="lang-label">EN</span>
+      </button>
+      <div class="today-badge" id="today-badge">
+        <span class="today-pulse"></span>
+        <span id="today-date"></span>
       </div>
+      <button id="btn-export" class="btn-icon" title="Export">💾</button>
+      <button id="btn-import" class="btn-icon" title="Import">📂</button>
     </div>
-
-    <nav class="sidebar-nav">
-      <a class="nav-item active" data-page="dashboard" id="nav-dashboard">
-        <span class="nav-icon">📊</span>
-        <span class="nav-text" data-i18n="nav.dashboard">儀表板</span>
-      </a>
-      <a class="nav-item" data-page="calendar" id="nav-calendar">
-        <span class="nav-icon">📅</span>
-        <span class="nav-text" data-i18n="nav.calendar">培養日曆</span>
-      </a>
-      <div class="nav-divider"></div>
-      <a class="nav-item" data-page="species" id="nav-species">
-        <span class="nav-icon">🦠</span>
-        <span class="nav-text" data-i18n="nav.species">藻種管理</span>
-      </a>
-      <a class="nav-item" data-page="inventory" id="nav-inventory">
-        <span class="nav-icon">🧪</span>
-        <span class="nav-text" data-i18n="nav.inventory">器材庫存</span>
-      </a>
-      <div class="nav-divider"></div>
-      <a class="nav-item" data-page="demand" id="nav-demand">
-        <span class="nav-icon">📦</span>
-        <span class="nav-text" data-i18n="nav.demand">養殖場需求</span>
-        <span id="demand-badge" class="nav-badge hidden">0</span>
-      </a>
-      <a class="nav-item" data-page="walne" id="nav-walne">
-        <span class="nav-icon">⚗️</span>
-        <span class="nav-text" data-i18n="nav.walne">培養基計算</span>
-      </a>
-      <a class="nav-item" data-page="log" id="nav-log">
-        <span class="nav-icon">📝</span>
-        <span class="nav-text" data-i18n="nav.log">培養日誌</span>
-      </a>
-      <a class="nav-item" data-page="copepods" id="nav-copepods">
-        <span class="nav-icon">🦠</span>
-        <span class="nav-text" data-i18n="nav.copepods">橈足類</span>
-      </a>
-      <a class="nav-item" data-page="settings" id="nav-settings">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-text" data-i18n="nav.settings">設定</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <button id="lang-toggle" class="sidebar-btn" title="Switch Language / 切換語言">
-        <span class="btn-content">🌐 <span id="lang-label">EN</span></span>
-      </button>
-      <button id="btn-export" class="sidebar-btn" title="Export Data / 匯出資料">
-        <span class="btn-content">💾 <span data-i18n="common.export">匯出</span></span>
-      </button>
-      <button id="btn-import" class="sidebar-btn" title="Import Data / 匯入資料">
-        <span class="btn-content">📂 <span data-i18n="common.import">匯入</span></span>
-      </button>
-    </div>
-  </aside>
+  </nav>
+  
 
   <!-- ===== Main Content ===== -->
   <main id="main-content" class="main-content">
     <!-- Header Bar -->
-    <header class="main-header">
-      <div class="header-left">
-        <button id="sidebar-toggle" class="btn-icon sidebar-toggle" aria-label="Toggle Sidebar">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-        <h1 id="page-title" class="page-title" data-i18n="nav.dashboard">儀表板</h1>
-      </div>
-      <div class="header-right">
-        <div class="today-badge" id="today-badge">
-          <span class="today-pulse"></span>
-          <span>🗓️</span>
-          <span id="today-date"></span>
-        </div>
-      </div>
-    </header>
+    <div class="page-header-title"><h1 id="page-title" class="page-title" data-i18n="nav.dashboard">儀表板</h1></div>
 
     <!-- ========== PAGE: Dashboard ========== -->
     <section id="page-dashboard" class="page active">
@@ -374,6 +328,7 @@
           <span>＋</span> <span data-i18n="copepods.addLog">新增日誌</span>
         </button>
       </div>
+      <div id="copepods-calendar" class="calendar-wrapper" style="margin-bottom:2rem;"><div id="copepods-cal-grid" class="calendar-grid"></div></div>
       <div id="copepods-logs" class="log-entries"></div>
     </section>
 
@@ -456,6 +411,6 @@
   <input type="file" id="file-import" accept=".json" style="display:none">
 
   <!-- App Script -->
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
