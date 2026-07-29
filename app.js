@@ -22,12 +22,12 @@ window.AP = {};
 
   // ── DEFAULT DATA ──────────────────────────────────────────────────────
   const DEFAULT_SPECIES = [
-    { id: 'iso', code: 'Iso', icon: '🟡', nameZh: '等鞭金藻', nameEn: 'Isochrysis galbana', scientificName: 'Isochrysis galbana (T-Iso)', subcultureInterval: 6, inoculumRatio: 0.1, medium: 'walne', needsSilicate: false, color: '#f59e0b', flasksPerSubculture: 1, notes: '' },
-    { id: 'au5', code: 'Au5', icon: '🟢', nameZh: '藻桶20L (花寶)', nameEn: 'Au5 Bucket 20L (Huabao)', scientificName: 'Algae Bucket Culture', subcultureInterval: 7, inoculumRatio: 0.1, medium: 'huabao', needsSilicate: false, color: '#84cc16', flasksPerSubculture: 0, notes: '花寶培養基，用於餵食橈足類' },
-    { id: 'nanno', code: 'Nanno', icon: '🟩', nameZh: '微擬球藻', nameEn: 'Nannochloropsis oculata', scientificName: 'Nannochloropsis oculata', subcultureInterval: 8, inoculumRatio: 0.1, medium: 'walne', needsSilicate: false, color: '#10b981', flasksPerSubculture: 1, notes: '' },
-    { id: 'tetra', code: 'Tetra', icon: '🔵', nameZh: '扁藻', nameEn: 'Tetraselmis suecica', scientificName: 'Tetraselmis suecica', subcultureInterval: 7, inoculumRatio: 0.1, medium: 'walne', needsSilicate: false, color: '#06b6d4', flasksPerSubculture: 1, notes: '' },
-    { id: 'pro', code: 'Pro', icon: '🟣', nameZh: '舟形藻', nameEn: 'Proschkinia', scientificName: 'Proschkinia sp.', subcultureInterval: 4, inoculumRatio: 0.15, medium: 'walne', needsSilicate: true, color: '#8b5cf6', flasksPerSubculture: 1, notes: '需要矽酸鹽 (Stock D)' },
-    { id: 'chaeto', code: 'Chaeto', icon: '🩷', nameZh: '角毛藻', nameEn: 'Chaetoceros calcitrans', scientificName: 'Chaetoceros calcitrans', subcultureInterval: 4, inoculumRatio: 0.15, medium: 'walne', needsSilicate: true, color: '#ec4899', flasksPerSubculture: 1, notes: '需要矽酸鹽 (Stock D)' }
+    { id: 'iso', code: 'Iso', icon: '🟡', nameZh: '等鞭金藻', nameEn: 'Isochrysis galbana', scientificName: 'Isochrysis galbana (T-Iso)', subcultureIntervalMin: 6, subcultureIntervalMax: 11, inoculumRatio: 0.1, medium: 'walne', needsSilicate: false, color: '#f59e0b', flasksPerSubculture: 1, notes: '' },
+    { id: 'au5', code: 'Au5', icon: '🟢', nameZh: '藻桶20L (花寶)', nameEn: 'Au5 Bucket 20L (Huabao)', scientificName: 'Algae Bucket Culture', subcultureIntervalMin: 7, subcultureIntervalMax: 17, inoculumRatio: 0.1, medium: 'huabao', needsSilicate: false, color: '#84cc16', flasksPerSubculture: 0, notes: '花寶培養基，用於餵食橈足類' },
+    { id: 'nanno', code: 'Nanno', icon: '🟩', nameZh: '微擬球藻', nameEn: 'Nannochloropsis oculata', scientificName: 'Nannochloropsis oculata', subcultureIntervalMin: 8, subcultureIntervalMax: 18, inoculumRatio: 0.1, medium: 'walne', needsSilicate: false, color: '#10b981', flasksPerSubculture: 1, notes: '' },
+    { id: 'tetra', code: 'Tetra', icon: '🔵', nameZh: '扁藻', nameEn: 'Tetraselmis suecica', scientificName: 'Tetraselmis suecica', subcultureIntervalMin: 7, subcultureIntervalMax: 17, inoculumRatio: 0.1, medium: 'walne', needsSilicate: false, color: '#06b6d4', flasksPerSubculture: 1, notes: '' },
+    { id: 'pro', code: 'Pro', icon: '🟣', nameZh: '舟形藻', nameEn: 'Proschkinia', scientificName: 'Proschkinia sp.', subcultureIntervalMin: 4, subcultureIntervalMax: 8, inoculumRatio: 0.15, medium: 'walne', needsSilicate: true, color: '#8b5cf6', flasksPerSubculture: 1, notes: '需要矽酸鹽 (Stock D)' },
+    { id: 'chaeto', code: 'Chaeto', icon: '🩷', nameZh: '角毛藻', nameEn: 'Chaetoceros calcitrans', scientificName: 'Chaetoceros calcitrans', subcultureIntervalMin: 4, subcultureIntervalMax: 8, inoculumRatio: 0.15, medium: 'walne', needsSilicate: true, color: '#ec4899', flasksPerSubculture: 1, notes: '需要矽酸鹽 (Stock D)' }
   ];
 
   const DEFAULT_CONTAINERS = [
@@ -250,10 +250,20 @@ window.AP = {};
     });
     AP.state.species = load('ap-species', JSON.parse(JSON.stringify(DEFAULT_SPECIES)));
     
+    // Migration for range-based subculture intervals
+    AP.state.species.forEach(sp => {
+      if (sp.subcultureInterval !== undefined) {
+        sp.subcultureIntervalMin = sp.subcultureInterval;
+        sp.subcultureIntervalMax = sp.subcultureInterval + 5;
+        delete sp.subcultureInterval;
+      }
+    });
+
     // Migration for Proschkinia interval correction
     const proSp = AP.state.species.find(s => s.id === 'pro');
-    if (proSp && proSp.subcultureInterval === 10) {
-      proSp.subcultureInterval = 4;
+    if (proSp && (proSp.subcultureInterval === 10 || proSp.subcultureIntervalMin === 10)) {
+      proSp.subcultureIntervalMin = 4;
+      proSp.subcultureIntervalMax = 8;
       proSp.needsSilicate = true;
       proSp.notes = '需要矽酸鹽 (Stock D)';
       save('ap-species', AP.state.species);
@@ -388,14 +398,20 @@ window.AP = {};
     AP.state.species.forEach(sp => {
       if (sp.id === 'au5') return;
       let last = AP.state.subDates[sp.id] || today;
-      let next = addDays(last, sp.subcultureInterval);
-      while (next <= horizon) {
+      let nextMin = addDays(last, sp.subcultureIntervalMin);
+      let nextMax = addDays(last, sp.subcultureIntervalMax);
+      
+      while (nextMin <= horizon) {
         let flexDates = [];
-        for (let i = -settings.flexAdvance; i <= settings.flexDelay; i++) {
-          flexDates.push(addDays(next, i));
+        let diff = diffDays(nextMin, nextMax);
+        for (let i = 0; i <= diff; i++) {
+          flexDates.push(addDays(nextMin, i));
         }
-        dueEvents.push({ speciesId: sp.id, ideal: next, flex: flexDates, sp });
-        next = addDays(next, sp.subcultureInterval);
+        dueEvents.push({ speciesId: sp.id, ideal: nextMax, flex: flexDates, sp });
+        
+        last = nextMax;
+        nextMin = addDays(last, sp.subcultureIntervalMin);
+        nextMax = addDays(last, sp.subcultureIntervalMax);
       }
     });
 
@@ -461,17 +477,8 @@ window.AP = {};
 
       // If no valid existing workday, find the best date
       if (!assigned) {
-        for (const fd of ev.flex) {
-          if (fd >= today) {
-            const w = getWorkload(fd);
-            if (w + neededTime <= settings.maxDailyHours && w < minWorkload) {
-              assigned = fd;
-              minWorkload = w;
-            }
-          }
-        }
+        assigned = ev.ideal >= today ? ev.ideal : today;
       }
-      if (!assigned) assigned = ev.ideal >= today ? ev.ideal : today;
       
       workDays.add(assigned);
       addWorkload(assigned, neededTime);
@@ -576,16 +583,30 @@ window.AP = {};
     const scc = document.getElementById('species-countdown');
     scc.innerHTML = AP.state.species.filter(sp => sp.id !== 'au5').map(sp => {
       const last = AP.state.subDates[sp.id] || today;
-      const next = addDays(last, sp.subcultureInterval);
-      const left = diffDays(today, next);
       const elapsed = diffDays(last, today);
-      const pct = Math.max(0, Math.min(100, (elapsed / sp.subcultureInterval) * 100));
-      const color = left > 2 ? sp.color : left >= 0 ? 'var(--warning)' : 'var(--danger)';
-      const label = left > 0 ? `${left} ${t('species.daysLeft')}` : left === 0 ? t('species.dueToday') : t('species.overdue');
+      const pct = Math.max(0, Math.min(100, (elapsed / sp.subcultureIntervalMax) * 100));
+      
+      let color, label, displayNum;
+      if (elapsed < sp.subcultureIntervalMin) {
+        color = '#10b981'; // Green/waiting
+        const leftMin = sp.subcultureIntervalMin - elapsed;
+        displayNum = leftMin;
+        label = `${leftMin} ${t('species.daysLeft')}`;
+      } else if (elapsed <= sp.subcultureIntervalMax) {
+        color = 'var(--warning)'; // Yellow/ready
+        const leftMax = sp.subcultureIntervalMax - elapsed;
+        displayNum = leftMax;
+        label = t('species.dueToday') || 'Ready';
+      } else {
+        color = 'var(--danger)'; // Red/overdue
+        const over = elapsed - sp.subcultureIntervalMax;
+        displayNum = -over;
+        label = t('species.overdue');
+      }
       return `<div class="species-countdown-card">
         <div class="sp-icon">${sp.icon}</div>
         <div class="sp-name">${sp.code}</div>
-        <div class="sp-countdown" style="color:${color}">${left > 0 ? left : left === 0 ? '!' : left}</div>
+        <div class="sp-countdown" style="color:${color}">${displayNum === 0 ? '!' : displayNum}</div>
         <div class="sp-countdown-label">${label}</div>
         <div class="sp-bar"><div class="sp-bar-fill" style="width:${pct}%;background:${color}"></div></div>
       </div>`;
@@ -808,8 +829,22 @@ window.AP = {};
     const grid = document.getElementById('species-grid');
     grid.innerHTML = AP.state.species.map(sp => {
       const last = AP.state.subDates[sp.id];
-      const next = last ? addDays(last, sp.subcultureInterval) : '—';
-      const left = last ? diffDays(today, next) : '—';
+      const nextMin = last ? addDays(last, sp.subcultureIntervalMin) : '—';
+      const nextMax = last ? addDays(last, sp.subcultureIntervalMax) : '—';
+      
+      let nextStr = '—';
+      let nextColor = 'var(--primary)';
+      if (last) {
+        const elapsed = diffDays(last, today);
+        if (elapsed < sp.subcultureIntervalMin) {
+          nextColor = '#10b981';
+        } else if (elapsed <= sp.subcultureIntervalMax) {
+          nextColor = 'var(--warning)';
+        } else {
+          nextColor = 'var(--danger)';
+        }
+        nextStr = `${shortDate(nextMin)} - ${shortDate(nextMax)}`;
+      }
       return `<div class="species-card sp-accent-${sp.id}" style="--sp-color:${sp.color}">
         <div class="sp-header">
           <div style="display:flex;align-items:center;gap:12px">
@@ -825,10 +860,10 @@ window.AP = {};
           </div>
         </div>
         <div class="sp-info-grid">
-          <div class="sp-info-item"><span class="sp-info-label">${t('species.interval')}</span><span class="sp-info-value">${sp.subcultureInterval} ${t('common.days')}</span></div>
+          <div class="sp-info-item"><span class="sp-info-label">${t('species.interval')}</span><span class="sp-info-value">${sp.subcultureIntervalMin}-${sp.subcultureIntervalMax} ${t('common.days')}</span></div>
           <div class="sp-info-item"><span class="sp-info-label">${t('species.medium')}</span><span class="sp-info-value" style="text-transform:capitalize">${sp.medium}</span></div>
           <div class="sp-info-item"><span class="sp-info-label">${t('species.lastSubculture')}</span><span class="sp-info-value">${last ? shortDate(last) : '—'}</span></div>
-          <div class="sp-info-item"><span class="sp-info-label">${t('species.nextDue')}</span><span class="sp-info-value" style="color:${typeof left === 'number' && left <= 1 ? 'var(--danger)' : 'var(--primary)'}">${next !== '—' ? shortDate(next) : '—'}</span></div>
+          <div class="sp-info-item"><span class="sp-info-label">${t('species.nextDue')}</span><span class="sp-info-value" style="color:${nextColor}">${nextStr}</span></div>
           <div class="sp-info-item"><span class="sp-info-label">${t('species.ratio')}</span><span class="sp-info-value">${(sp.inoculumRatio * 100).toFixed(0)}%</span></div>
           <div class="sp-info-item"><span class="sp-info-label">${t('species.flasks')}</span><span class="sp-info-value">${sp.flasksPerSubculture}</span></div>
         </div>
@@ -853,14 +888,14 @@ window.AP = {};
 
   const openSpeciesModal = (existing) => {
     const isNew = !existing;
-    const sp = existing || { id: uid(), code: '', icon: '🦠', nameZh: '', nameEn: '', scientificName: '', subcultureInterval: 7, inoculumRatio: 0.1, medium: 'walne', needsSilicate: false, color: '#3b82f6', flasksPerSubculture: 1, notes: '' };
+    const sp = existing || { id: uid(), code: '', icon: '🦠', nameZh: '', nameEn: '', scientificName: '', subcultureIntervalMin: 7, subcultureIntervalMax: 17, inoculumRatio: 0.1, medium: 'walne', needsSilicate: false, color: '#3b82f6', flasksPerSubculture: 1, notes: '' };
     const html = `
       <div class="form-row"><div class="form-group"><label>${t('species.code')}</label><input type="text" id="sp-code" class="form-input" value="${sp.code}"></div>
       <div class="form-group"><label>Icon</label><input type="text" id="sp-icon" class="form-input" value="${sp.icon}" maxlength="4"></div></div>
       <div class="form-row"><div class="form-group"><label>${t('species.name')} (中文)</label><input type="text" id="sp-zh" class="form-input" value="${sp.nameZh}"></div>
       <div class="form-group"><label>${t('species.name')} (EN)</label><input type="text" id="sp-en" class="form-input" value="${sp.nameEn}"></div></div>
       <div class="form-group"><label>${t('species.scientific')}</label><input type="text" id="sp-sci" class="form-input" value="${sp.scientificName}"></div>
-      <div class="form-row"><div class="form-group"><label>${t('species.interval')}</label><input type="number" id="sp-int" class="form-input" value="${sp.subcultureInterval}" min="1"></div>
+      <div class="form-row"><div class="form-group"><label>${t('species.interval')} (Min/Max)</label><div style="display:flex;gap:4px"><input type="number" id="sp-int-min" class="form-input" value="${sp.subcultureIntervalMin}" min="1" style="width:50%"><input type="number" id="sp-int-max" class="form-input" value="${sp.subcultureIntervalMax}" min="1" style="width:50%"></div></div>
       <div class="form-group"><label>${t('species.ratio')}</label><input type="number" id="sp-ratio" class="form-input" value="${sp.inoculumRatio}" step="0.05" min="0.05" max="1"></div></div>
       <div class="form-row"><div class="form-group"><label>${t('species.medium')}</label><select id="sp-med" class="form-select">
         <option value="walne" ${sp.medium === 'walne' ? 'selected' : ''}>Walne</option>
@@ -879,7 +914,8 @@ window.AP = {};
       sp.nameZh = document.getElementById('sp-zh').value;
       sp.nameEn = document.getElementById('sp-en').value;
       sp.scientificName = document.getElementById('sp-sci').value;
-      sp.subcultureInterval = parseInt(document.getElementById('sp-int').value) || 7;
+      sp.subcultureIntervalMin = parseInt(document.getElementById('sp-int-min').value) || 7;
+      sp.subcultureIntervalMax = parseInt(document.getElementById('sp-int-max').value) || 17;
       sp.inoculumRatio = parseFloat(document.getElementById('sp-ratio').value) || 0.1;
       sp.medium = document.getElementById('sp-med').value;
       sp.flasksPerSubculture = parseInt(document.getElementById('sp-flasks').value) || 0;
@@ -1216,7 +1252,7 @@ window.AP = {};
       <div class="species-card">
         <div class="sp-header">
           <div style="display:flex;align-items:center;gap:12px">
-            <div class="sp-icon-wrapper" style="background:var(--primary-soft)">🦐</div>
+            <div class="sp-icon-wrapper" style="background:var(--primary-soft)">🦠</div>
             <div>
               <div class="sp-code">${c.batchName}</div>
               <div class="sp-scientific">${c.status} | Start: ${shortDate(c.startDate)}</div>
