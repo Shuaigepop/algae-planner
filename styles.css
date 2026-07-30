@@ -169,10 +169,10 @@ body {
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 .sidebar-toggle {
-  display: none;
+  display: flex;
   background: none;
   border: none;
-  color: var(--text-main);
+  color: var(--text-muted);
   cursor: pointer;
   margin-right: 16px;
 }
@@ -494,10 +494,16 @@ button { font-family: inherit; outline: none; cursor: pointer; transition: 0.2s;
 }
 @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
+/* Tables */
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 4px; border-bottom: 1px solid var(--border-light); font-size: 13px; }
+th { color: var(--text-muted); font-weight: 600; }
+td { vertical-align: top; }
+
 /* Walne Page Layout */
 .walne-layout { display: flex; flex-direction: column; gap: 32px; }
 .preset-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.walne-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.walne-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
 .walne-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light); }
 .walne-card-icon { font-size: 28px; }
 .walne-card-title { font-weight: 800; font-size: 16px; }
@@ -505,6 +511,9 @@ button { font-family: inherit; outline: none; cursor: pointer; transition: 0.2s;
 
 /* Empty States */
 .empty-state { padding: 60px 40px; text-align: center; color: var(--text-muted); font-weight: 600; font-size: 15px; background: var(--bg-page); border: 1px dashed #cbd5e1; border-radius: 20px; }
+
+/* Desktop Sidebar Collapse */
+.sidebar.collapsed { margin-left: -260px; }
 
 /* Mobile Adaptations */
 @media (max-width: 768px) {

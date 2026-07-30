@@ -1703,7 +1703,7 @@ window.AP = {};
 
     // Sidebar toggle (mobile)
     document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar').classList.toggle('collapsed');
     });
 
     // Language toggle
