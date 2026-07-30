@@ -349,9 +349,9 @@ body {
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 6px;
-  color: #fff;
+  color: #000;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-weight: 700;
+  font-weight: 800;
 }
 .cal-task-pill.completed { opacity: 0.5; text-decoration: line-through; }
 .cal-more { font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: center; margin-top: 4px; }
@@ -516,7 +516,7 @@ button { font-family: inherit; outline: none; cursor: pointer; transition: 0.2s;
   .cal-header-cell { font-size: 10px; }
   .cal-cell { min-height: 70px; padding: 4px; border-radius: 8px; }
   .cal-date { font-size: 12px; }
-  .cal-task-pill { display: none; }
+  
   .day-detail { width: 100%; border-left: none; }
 }
 
@@ -549,8 +549,8 @@ button { font-family: inherit; outline: none; cursor: pointer; transition: 0.2s;
 .log-actions { margin-left: auto; }
 
 /* Calendar Pill Background Fix */
-.cal-task-pill.type-inoculate { background: var(--color-inoculate); color: #fff; }
-.cal-task-pill.type-sterilize { background: var(--color-sterilize); color: #fff; }
-.cal-task-pill.type-harvest { background: var(--color-harvest); color: #fff; }
-.cal-task-pill.type-scaleup { background: var(--color-scaleup); color: #fff; }
-.cal-task-pill.type-rest { background: var(--color-rest); color: #fff; }
+.cal-task-pill.type-inoculate { background: var(--color-inoculate); color: #000; }
+.cal-task-pill.type-sterilize { background: var(--color-sterilize); color: #000; }
+.cal-task-pill.type-harvest { background: var(--color-harvest); color: #000; }
+.cal-task-pill.type-scaleup { background: var(--color-scaleup); color: #000; }
+.cal-task-pill.type-rest { background: var(--color-rest); color: #000; }
