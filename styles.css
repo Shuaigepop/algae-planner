@@ -513,7 +513,9 @@ td { vertical-align: top; }
 .empty-state { padding: 60px 40px; text-align: center; color: var(--text-muted); font-weight: 600; font-size: 15px; background: var(--bg-page); border: 1px dashed #cbd5e1; border-radius: 20px; }
 
 /* Desktop Sidebar Collapse */
-.sidebar.collapsed { margin-left: -260px; }
+@media (min-width: 769px) {
+  .sidebar.collapsed { margin-left: -260px; }
+}
 
 /* Mobile Adaptations */
 @media (max-width: 768px) {
