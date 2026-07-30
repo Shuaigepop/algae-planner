@@ -666,9 +666,10 @@ window.AP = {};
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const dayTasks = AP.state.tasks.filter(tk => tk.date === dateStr);
+      const dayLogs = AP.state.logs.filter(l => l.copepodId != null && l.date === dateStr);
       const isToday = dateStr === today;
       const isSelected = dateStr === AP.state.selectedDate;
-      const isRest = dayTasks.length === 0;
+      const isRest = dayTasks.length === 0 && dayLogs.length === 0;
 
       let dailyMins = 0;
       const settings = AP.state.settings;
@@ -693,19 +694,31 @@ window.AP = {};
       if (isRest) classes += ' rest-day';
 
       let pillsHtml = '';
-      const shown = dayTasks.slice(0, 4);
-      shown.forEach(tk => {
-        const sp = AP.state.species.find(s => s.id === tk.speciesId);
-        let qty = '';
-        if (tk.type === 'inoculate' || tk.type === 'sterilize') {
-          qty = sp ? ` (${sp.flasksPerSubculture}${AP.state.lang==='zh'?'瓶':'x'})` : '';
-        } else if (tk.type === 'scaleup') {
-          qty = tk.notes ? ` (${tk.notes})` : '';
+      const allItems = [...dayTasks, ...dayLogs];
+      const shown = allItems.slice(0, 4);
+      shown.forEach(item => {
+        if (item.speciesId) {
+          const sp = AP.state.species.find(s => s.id === item.speciesId);
+          let qty = '';
+          if (item.type === 'inoculate' || item.type === 'sterilize') {
+            qty = sp ? ` (${sp.flasksPerSubculture}${AP.state.lang==='zh'?'瓶':'x'})` : '';
+          } else if (item.type === 'scaleup') {
+            qty = item.notes ? ` (${item.notes})` : '';
+          }
+          pillsHtml += `<div class="cal-task-pill type-${item.type} ${item.completed ? 'completed' : ''}">${sp ? sp.icon : ''} ${sp ? sp.code : ''} ${t('task.' + item.type)}${qty}</div>`;
+        } else if (item.copepodId) {
+          const cp = AP.state.copepods.find(c => c.id === item.copepodId);
+          const name = cp ? cp.batchName : 'Copepod';
+          let logClass = ''; let label = '';
+          if (item.type === 'feed') { logClass = 'type-inoculate'; label = 'Feed'; }
+          else if (item.type === 'water') { logClass = 'type-scaleup'; label = 'Water'; }
+          else if (item.type === 'status') { logClass = 'type-rest'; label = 'Status'; }
+          else { logClass = 'type-harvest'; label = item.type; }
+          pillsHtml += `<div class="cal-task-pill ${logClass}">🦠 ${label} (${name})</div>`;
         }
-        pillsHtml += `<div class="cal-task-pill type-${tk.type} ${tk.completed ? 'completed' : ''}">${sp ? sp.icon : ''} ${sp ? sp.code : ''} ${t('task.' + tk.type)}${qty}</div>`;
       });
-      if (dayTasks.length > 4) {
-        pillsHtml += `<div class="cal-more">+${dayTasks.length - 4}</div>`;
+      if (allItems.length > 4) {
+        pillsHtml += `<div class="cal-more">+${allItems.length - 4}</div>`;
       }
 
       grid.innerHTML += `<div class="${classes}" onclick="AP.selectDay('${dateStr}')">

@@ -547,3 +547,10 @@ button { font-family: inherit; outline: none; cursor: pointer; transition: 0.2s;
 .log-notes { color: var(--text-muted); font-size: 14px; flex: 2; min-width: 200px; }
 .log-status { font-size: 20px; }
 .log-actions { margin-left: auto; }
+
+/* Calendar Pill Background Fix */
+.cal-task-pill.type-inoculate { background: var(--color-inoculate); color: #fff; }
+.cal-task-pill.type-sterilize { background: var(--color-sterilize); color: #fff; }
+.cal-task-pill.type-harvest { background: var(--color-harvest); color: #fff; }
+.cal-task-pill.type-scaleup { background: var(--color-scaleup); color: #fff; }
+.cal-task-pill.type-rest { background: var(--color-rest); color: #fff; }
